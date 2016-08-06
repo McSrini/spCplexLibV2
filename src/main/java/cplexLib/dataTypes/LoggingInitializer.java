@@ -26,8 +26,12 @@ public abstract class LoggingInitializer {
             //initialize the LOG4J logger
             logger=Logger.getLogger(this.getClass());
             logger.setLevel(Level.DEBUG);
-            PatternLayout layout = new PatternLayout("%d{ISO8601} [%t] %-5p %c %x - %m%n");     
-            logger.addAppender(new RollingFileAppender(layout,LOG_FOLDER +this.getClass().getSimpleName()+partitionID+ LOG_FILE_EXTENSION ));
+            PatternLayout layout = new PatternLayout("%5p  %d  %F  %L  %m%n"); 
+            RollingFileAppender rollingFileAppender = new RollingFileAppender(layout,LOG_FOLDER +this.getClass().getSimpleName()+partitionID+ LOG_FILE_EXTENSION );
+            rollingFileAppender.setAppend(false);
+             
+            logger.addAppender(rollingFileAppender);
+            logger.setAdditivity(false);
             
             isLoggingInitialized=true;
         }

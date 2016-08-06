@@ -59,7 +59,7 @@ public class NodeHandler extends IloCplex.NodeCallback{
             //To address this, we should also not edown the partition end time in this node, and use it to calculate effective start time.
             //ToDo for later
 
-            if (  isLoggingInitialized) logger.info("Start time is " + System.currentTimeMillis());
+            //if (  isLoggingInitialized) logger.info("Start time is " + System.currentTimeMillis());
             nodeData.setStartTimeFor_LP_Relaxation(System.currentTimeMillis());
             setNodeData(ZERO,nodeData);                   
                 
@@ -73,9 +73,9 @@ public class NodeHandler extends IloCplex.NodeCallback{
             //initialize the LOG4J logger
             logger=Logger.getLogger(this.getClass());
             logger.setLevel(Level.DEBUG);
-            PatternLayout layout = new PatternLayout("%d{ISO8601} [%t] %-5p %c %x - %m%n");     
+            PatternLayout layout = new PatternLayout("%5p  %d  %F  %L  %m%n");     
             logger.addAppender(new RollingFileAppender(layout,LOG_FOLDER +this.getClass().getSimpleName()+partitionID+ LOG_FILE_EXTENSION ));
-            
+            logger.setAdditivity(false);
             isLoggingInitialized=true;
         }
          

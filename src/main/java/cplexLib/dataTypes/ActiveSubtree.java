@@ -12,6 +12,7 @@ import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.cplex.IloCplex;
 import static cplexLib.constantsAndParams.Constants.*;
+import static cplexLib.constantsAndParams.Parameters.MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE;
 import static cplexLib.constantsAndParams.Parameters.PARTITION_ID;
 import static cplexLib.constantsAndParams.Parameters.SAV_FILENAME;
 import java.util.ArrayList;
@@ -198,4 +199,9 @@ public class ActiveSubtree extends LoggingInitializer {
         if (this.isDiscardable()) status += " and also discardable.";  
         return status;
     }    
+    
+    public boolean isTooBig (){
+        return (this.getNumLeafNodes(false) + this.getNumLeafNodes(true)) > MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE;
+    }
+    
 }

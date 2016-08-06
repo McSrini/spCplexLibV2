@@ -75,16 +75,16 @@ public class BranchHandler extends IloCplex.BranchCallback{
             if (canTreeBeDiscarded() || (canNodeBeDiscarded()&&isSubtreeRoot())   ){
                 
                 //no point solving this tree any longer 
-                if (  isLoggingInitialized) logger.info( this.treeMetaData.getGUID()+         " tree is getting discarded "); 
+                //if (  isLoggingInitialized) logger.info( this.treeMetaData.getGUID()+         " tree is getting discarded "); 
                 treeMetaData.setEntireTreeDiscardable();
                 abort();
                 
             } else  /*check if this node can be discarded*/ if (canNodeBeDiscarded()) {               
                 // this node and its kids are useless
-                if (  isLoggingInitialized) logger.info( this.treeMetaData.getGUID()+         " tree is pruning inferior node "+         ((NodeAttachment)getNodeData()).nodeMetadata.nodeID); 
+                //if (  isLoggingInitialized) logger.info( this.treeMetaData.getGUID()+         " tree is pruning inferior node "+         ((NodeAttachment)getNodeData()).nodeMetadata.nodeID); 
                 prune();  
             } else      if (hasNodeMigratedAway()) {
-                    if (  isLoggingInitialized) logger.info( this.treeMetaData.getGUID()+         " tree is pruning migrated node "+         ((NodeAttachment)getNodeData()).nodeMetadata.nodeID);
+                    //if (  isLoggingInitialized) logger.info( this.treeMetaData.getGUID()+         " tree is pruning migrated node "+         ((NodeAttachment)getNodeData()).nodeMetadata.nodeID);
                     prune();                    
             } else {
                 
@@ -251,9 +251,9 @@ public class BranchHandler extends IloCplex.BranchCallback{
             //initialize the LOG4J logger
             logger=Logger.getLogger(this.getClass());
             logger.setLevel(Level.DEBUG);
-            PatternLayout layout = new PatternLayout("%d{ISO8601} [%t] %-5p %c %x - %m%n");     
+            PatternLayout layout = new PatternLayout("%5p  %d  %F  %L  %m%n");     
             logger.addAppender(new RollingFileAppender(layout,LOG_FOLDER +this.getClass().getSimpleName()+partitionID+ LOG_FILE_EXTENSION ));
-            
+            logger.setAdditivity(false);
             isLoggingInitialized=true;
         }
          
