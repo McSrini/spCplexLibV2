@@ -9,15 +9,14 @@ import static cplexLib.constantsAndParams.Constants.*;
 import static cplexLib.constantsAndParams.Parameters.LOG_FOLDER;
 import static cplexLib.constantsAndParams.Parameters.MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE;
 import static cplexLib.constantsAndParams.Parameters.PARTITION_ID;
-import cplexLib.dataTypes.*;
+import cplexLib.dataTypes.*; 
 import java.time.Instant;
 import java.util.*;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
-import org.apache.log4j.RollingFileAppender;
-
+import org.apache.log4j.RollingFileAppender; 
 /**
  *
  * @author srini
@@ -30,7 +29,7 @@ import org.apache.log4j.RollingFileAppender;
 public class SparkSimulatorDriver {
     
     private static Logger logger=Logger.getLogger(SparkSimulatorDriver.class);
-    final static int ITER_TIME= 2*60 ;// 2 minutes
+    final static int ITER_TIME= 60*2 ;// seconds
     final static int NUM_PARTITIONS= 39 ;// 
     final static int  MAX_ITERATIONS  =   THOUSAND  ; 
     
@@ -71,7 +70,7 @@ public class SparkSimulatorDriver {
             //abort computation in case of error
             if (incumbent.isError() || incumbent.isUnbounded()) break;
             
-            logger.info("Starting iteration "+iteration);
+            logger.info(NEWLINE+" Starting iteration "+iteration+ NEWLINE);
             
             //solve every partition for time slice
             MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE= getMAxKidsPerTree(iteration);
@@ -109,20 +108,24 @@ public class SparkSimulatorDriver {
             //farm and redistribute nodes, unless all trees are done
             //
               
-            int treesLeft = ZERO;
+            
             for ( ActiveSubtreeCollection astc : partitionList){
-                 treesLeft +=astc.cleanCompletedAndDiscardedTrees();
-                 logger.info("Number of tree , easy nodes, hard nodes, in partition is " +astc.getNumberOFTrees() + " ," + astc.getTotalLeafNodesInPartition(true)
+                 astc.cleanCompletedAndDiscardedTrees();
+                 logger.info("Number of tree , easy nodes, hard nodes, in partition is " +
+                         astc.getNumberOFTrees() + " ," + astc.getTotalLeafNodesInPartition(true)
                  + " ," + astc.getTotalLeafNodesInPartition(false));
             }
           
-            
+             
             //we only farm at the end of iter 0
-            if (ZERO==iteration && treesLeft>ZERO) {
+            if (ZERO==iteration  ) {
                 dofarming();
-            }
+            } 
             
-            
+            //test
+            //add averaging heuristic
+            //doAverageFarming();
+          
         }
         
         //print solution
@@ -134,6 +137,8 @@ public class SparkSimulatorDriver {
         }
         
     }
+    
+
     
     //remove all nodes from tree 0 on partition 0 , and distribute randomly across all partitions
     private static void dofarming() throws Exception{
@@ -166,4 +171,131 @@ public class SparkSimulatorDriver {
     private static int getMAxKidsPerTree (int iter){
         return iter == ZERO ? MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE : MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE*TEN*TEN*THOUSAND;
     }
+    
+    /*
+    private static void doAverageFarming() throws Exception {
+        logger.info("Farming ... ");
+        Map <Integer, List<NodeAttachmentMetadata> > perPartitionPendingNodesMap= 
+                new HashMap <Integer, List<NodeAttachmentMetadata> > ();
+        for ( int pid =ZERO; pid< NUM_PARTITIONS;pid++){
+            ActiveSubtreeCollection astc =partitionList.get(pid);
+            perPartitionPendingNodesMap.put(pid,astc.getNodeMetaData());
+        }
+
+        AveragingHeuristic loabBalancingHueristic= new AveragingHeuristic(perPartitionPendingNodesMap);
+        Map <Integer, List<String >> nodesToPluckOut = loabBalancingHueristic.nodesToPluckOut;
+        Map <Integer, Integer> nodesToMoveIn =loabBalancingHueristic.nodesToMoveIn;
+
+        //pluck nodes and collect into a map
+        Map <Integer, List<NodeAttachment > > farmedNodesMap = new HashMap <Integer, List<NodeAttachment > > () ;
+        for ( int originPartitionID :nodesToPluckOut.keySet()){
+            List<NodeAttachment > farmedNodeList = new ArrayList<NodeAttachment > ();
+        
+            //find nodes to pluck from every tree in this collection
+            ActiveSubtreeCollection collection = partitionList.get(originPartitionID);
+            for(String treeGuid : collection.getActiveSubtreeIDs()){
+            
+                List<String> nodesIDsToPluckFromTree =        
+                        findNodeIDsToPluck(  treeGuid,   originPartitionID, nodesToPluckOut);
+                                
+                //remove these nodes from the tree and collect them
+                for (String nodeID : nodesIDsToPluckFromTree ){
+                    farmedNodeList.add(collection.farmOutNode ( treeGuid,  nodeID) );
+                }
+                
+            }
+            
+            farmedNodesMap.put(originPartitionID, farmedNodeList);
+            
+        }
+        
+        //redistribute plucked nodes to starving partitions
+        List<Tuple2<Integer,NodeAttachment>> migratedNodesList = new ArrayList<Tuple2<Integer,NodeAttachment>> ();
+
+        for (Map.Entry<Integer, Integer> entry : nodesToMoveIn.entrySet()){
+            int destinationPartitionID = entry.getKey();
+            int count = entry.getValue();
+
+            //get count nodes from farmedNodes, and move them into partition partitionID
+            migratedNodesList .addAll( getSubSetOfFarmedNodes(farmedNodesMap, count, destinationPartitionID)) ;                
+        }
+        
+        for ( int pid =ZERO; pid< NUM_PARTITIONS;pid++){
+            ActiveSubtreeCollection astc =partitionList.get(pid);
+            astc.add( getNodeList( pid, migratedNodesList) );
+        }
+        
+
+
+        logger.info("Farming over. ");
+        for ( ActiveSubtreeCollection astc : partitionList){
+             //astc.cleanCompletedAndDiscardedTrees();
+             logger.info("Number of tree , easy nodes, hard nodes, in partition is " +
+                     astc.getNumberOFTrees() + " ," + astc.getTotalLeafNodesInPartition(true)
+             + " ," + astc.getTotalLeafNodesInPartition(false));
+        }
+        
+    }
+    
+    private static List<String> findNodeIDsToPluck(String treeGUID, int partitionID, Map <Integer, List<String >> nodesToPluckOutMap){
+        List<String> nodeIDList = new ArrayList<String>();
+        List<String> treesAndNodes = nodesToPluckOutMap.get(partitionID);
+        if(treesAndNodes !=null || treesAndNodes.size()>ZERO){
+            //there are nodes to pluck from this partition
+            for (String treeAndNode :treesAndNodes){
+                String [] stringArray =treeAndNode.split(DELIMITER);
+                String treeGuid = stringArray[ZERO];
+                String nodeID= stringArray[ONE];
+                if (treeGUID.equalsIgnoreCase(treeGuid)) nodeIDList.add(nodeID);
+            }
+        }
+        return nodeIDList;
+    }
+     
+    //extract count nodes from available farmed out nodes
+    private static  List<Tuple2<Integer,NodeAttachment>>  getSubSetOfFarmedNodes(Map <Integer, List<NodeAttachment > >  farmedNodes, 
+            int count, int destinationPartitionID ) {
+        List<Tuple2<Integer,NodeAttachment>> retval = new ArrayList<Tuple2<Integer,NodeAttachment>> ();
+        
+        while (count > ZERO) {
+            NodeAttachment node =removeOneNodeFromMap(farmedNodes);
+            Tuple2<Integer,NodeAttachment> tuple = new Tuple2<Integer,NodeAttachment>(destinationPartitionID, node);
+            retval.add(tuple);
+            
+            count = count - ONE;
+        }
+        
+        return retval;
+    }
+    
+    private static NodeAttachment removeOneNodeFromMap (Map <Integer, List<NodeAttachment > >  farmedNodes) {
+        NodeAttachment node =null;
+        
+        List<NodeAttachment > nodeList = null;
+        int pid = ZERO;
+        
+        for (Map.Entry <Integer, List<NodeAttachment >> entry :farmedNodes.entrySet() ) {
+            nodeList= entry.getValue();
+            node=nodeList.remove(ZERO);      
+            pid = entry.getKey();
+            break;
+        }
+        if (nodeList.size()>ZERO) {
+            farmedNodes.put(pid, nodeList);
+        }else {
+            farmedNodes.remove(pid);
+        }
+        
+        return node;
+    }
+      
+    private static List<NodeAttachment> getNodeList(int destinationPartitionID,  List<Tuple2<Integer,NodeAttachment>> migratedNodesList ) {
+        List<NodeAttachment> nodeList = new ArrayList<NodeAttachment> ();
+        for(Tuple2<Integer,NodeAttachment> tuple: migratedNodesList){
+            if(tuple._1==destinationPartitionID) nodeList.add(tuple._2);
+        }
+        return nodeList;
+    }
+    
+    */
 }

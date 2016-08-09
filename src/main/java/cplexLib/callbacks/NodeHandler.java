@@ -25,11 +25,22 @@ public class NodeHandler extends IloCplex.NodeCallback{
     //meta data of the subtree which we are monitoring
     private SubtreeMetaData treeMetaData;
     
+    //keep note of when the solution time slice ends for this tree
+    private double timeSliceEnd_millis ; // system millisec
+    
     public NodeHandler (SubtreeMetaData metaData) throws IOException {
         this.  treeMetaData= metaData;
         
     }
+    
+    public void setTimeSlice(double seconds){
+        timeSliceEnd_millis = THOUSAND * seconds + System.currentTimeMillis();
+    }
  
+    public double GetTimeSlice(){
+        return timeSliceEnd_millis ; 
+    }
+    
     protected void main() throws IloException {
         
         //initialize logging 
@@ -51,16 +62,24 @@ public class NodeHandler extends IloCplex.NodeCallback{
                         subTreeRoot.getUpperBounds(), 
                         subTreeRoot.getLowerBounds(),  
                         subTreeRoot.getDepthFromOriginalRoot(), 
-                        ZERO);         
+                        ZERO, subTreeRoot.getParentsBranchingTime());         
             }
 
-            //Mark the solution start time. 
-            //Solution time may end up being an overestimate, since it could include spark iteration restart time.
-            //To address this, we should also not edown the partition end time in this node, and use it to calculate effective start time.
-            //ToDo for later
-
-            //if (  isLoggingInitialized) logger.info("Start time is " + System.currentTimeMillis());
-            nodeData.setStartTimeFor_LP_Relaxation(System.currentTimeMillis());
+            //Mark the solution start time for this node, and end time for this solution time slice. 
+            //Note that node may branch before end time of this time slice is reached
+            //Note down solution time used so far 
+            //This is required to cater for a node being solved across more than 1 driver cycles
+            if(nodeData.getEndTimeOfCurrentSolutionTimeslice()<=ZERO){
+                //first time this node picked up for solving
+            }else{
+                nodeData.setTimeForWhichNodeHasAlreadyBeenSolved(
+                    nodeData.        getTimeForWhichNodeHasAlreadyBeenSolved()+
+                    nodeData.getEndTimeOfCurrentSolutionTimeslice()
+                    -nodeData.getStartTimeOfCurrentSolutionTimeslice());
+                
+            }
+            nodeData.setStartTimeOfCurrentSolutionTimeslice(System.currentTimeMillis());
+            nodeData.setEndTimeOfCurrentSolutionTimeslice(this.timeSliceEnd_millis);
             setNodeData(ZERO,nodeData);                   
                 
         }        

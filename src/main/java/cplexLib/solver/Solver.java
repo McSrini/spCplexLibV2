@@ -64,6 +64,7 @@ public class Solver extends LoggingInitializer {
         //can we supply MIP  start along with bestKnownGlobalOptimum ?         
        
         branchHandler.refresh(bestKnownGlobalOptimum);  
+        nodeHandler.setTimeSlice(timeSliceInSeconds);
        
         cplex.setParam(IloCplex.Param.TimeLimit, timeSliceInSeconds); 
         cplex.solve();

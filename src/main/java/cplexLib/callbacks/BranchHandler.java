@@ -101,13 +101,16 @@ public class BranchHandler extends IloCplex.BranchCallback{
                             subTreeRoot.getUpperBounds(), 
                             subTreeRoot.getLowerBounds(),  
                             subTreeRoot.getDepthFromOriginalRoot(), 
-                            ZERO);         
+                            ZERO, subTreeRoot.getParentsBranchingTime());         
                 }
+                
                 //update the node attachment with end time                
-                if (nodeData.getEndTimeFor_LP_Relaxation()<=ZERO)  {
-                    nodeData.setEndTimeFor_LP_Relaxation(System.currentTimeMillis());
-                    setNodeData(nodeData);
-                }                
+                nodeData.setEndTimeOfCurrentSolutionTimeslice(System.currentTimeMillis());
+                nodeData.setTimeForWhichNodeHasAlreadyBeenSolved(
+                    nodeData.        getTimeForWhichNodeHasAlreadyBeenSolved()+
+                    nodeData.getEndTimeOfCurrentSolutionTimeslice()
+                    -nodeData.getStartTimeOfCurrentSolutionTimeslice());
+                setNodeData(nodeData);
                 
                 //remove this node from the list of unsolved nodes
                 if (nodeData.getDepthFromSubtreeRoot()>ZERO) {

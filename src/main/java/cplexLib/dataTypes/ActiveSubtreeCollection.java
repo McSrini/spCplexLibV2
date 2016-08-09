@@ -41,7 +41,7 @@ public class ActiveSubtreeCollection   {
     private Solution bestKnownLocalSolution  = new Solution () ;
     private double bestKnownLocalOptimum =bestKnownLocalSolution.getObjectiveValue();
     
-    //for satistics
+    //for statistics
     public double totalTimeAllocatedForSolving = ZERO;
     public double totalTimeUsedForSolving = ZERO;
     
@@ -130,13 +130,31 @@ public class ActiveSubtreeCollection   {
         return idList ;
     }
     
+    public List <NodeAttachmentMetadata> getNodeMetaData() {
+        List <NodeAttachmentMetadata> metaDataList = new ArrayList <NodeAttachmentMetadata>();
+        for (ActiveSubtree tree: activeSubtreeList){
+            metaDataList.addAll(tree.getMetadataForLeafNodesPendingSolution().values());
+        }
+        return metaDataList;
+    }
+    
+    
+    public NodeAttachment farmOutNode (String treeGUID, String nodeID) {
+        ActiveSubtree subtree = null;
+        for (int index = ZERO ; index< activeSubtreeList.size(); index ++ ){
+            subtree = activeSubtreeList.get(index);
+            if (subtree.getGUID().equalsIgnoreCase(treeGUID)) break;
+        }
+        return subtree == null? null:subtree.removeUnsolvedLeafNode(nodeID);
+    }
+    
     public List <NodeAttachment> farmOutNodes (String treeGUID, int threshold) {
         ActiveSubtree subtree = null;
         for (int index = ZERO ; index< activeSubtreeList.size(); index ++ ){
             subtree = activeSubtreeList.get(index);
             if (subtree.getGUID().equalsIgnoreCase(treeGUID)) break;
         }
-        return subtree.farmOutNodes(threshold);
+        return subtree == null? null:subtree.farmOutNodes(threshold);
     }
     
     public Solution solve  ( Instant endTimeOnWorkerMachine,         Solution bestKnownGlobalSolution , int iteratioNumber, int partitionNumber) throws Exception{

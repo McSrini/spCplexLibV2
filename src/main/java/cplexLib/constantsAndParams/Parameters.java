@@ -13,7 +13,7 @@ public class Parameters implements Serializable{
     
     //do not allow any subtree to grow bigger than this
     // can be increased by the driver
-    public static int  MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE  =  TWO* THOUSAND  ; 
+    public static int  MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE  =  TWO* THOUSAND; 
      
     public static double  RELATIVE_MIP_GAP = ZERO;
    

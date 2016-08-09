@@ -44,7 +44,7 @@ public class NodeAttachment implements Serializable{
     }
     
     public NodeAttachment ( boolean easy,  Map< String, Double > upperBounds, 
-            Map< String, Double > lowerBounds,  int distanceFromOriginalRoot, int distanceFromSubtreeRoot) {
+            Map< String, Double > lowerBounds,  int distanceFromOriginalRoot, int distanceFromSubtreeRoot, double parentsBranchingTime) {
          
         this.upperBounds = new HashMap< String, Double >();
         this.lowerBounds = new HashMap< String, Double >();
@@ -59,8 +59,11 @@ public class NodeAttachment implements Serializable{
         nodeMetadata.isEasy = easy;
         nodeMetadata.distanceFromOriginalRoot=distanceFromOriginalRoot;
         nodeMetadata.distanceFromSubtreeRoot=distanceFromSubtreeRoot;
+        
+        nodeMetadata.timeTakenByParentToBranch =parentsBranchingTime;
     }
     
+
     public String toString() {
         String result = nodeMetadata.distanceFromOriginalRoot + NEWLINE;
         result += nodeMetadata.distanceFromSubtreeRoot+ NEWLINE;
@@ -87,23 +90,32 @@ public class NodeAttachment implements Serializable{
         return nodeMetadata.distanceFromSubtreeRoot  ;
     }
     
-    public double getTimeFor_LP_Relaxation() {
-        return  this.nodeMetadata.endTimeFor_LP_Relaxation_millisec-this.nodeMetadata.startTimeFor_LP_Relaxation_millisec;
+    public double getTimeTakenUntilBranching() {
+        return  this.nodeMetadata.solutionTimeUsedSofar ;
     }
-
-    public double getStartTimeFor_LP_Relaxation() {        
-        return this.nodeMetadata.startTimeFor_LP_Relaxation_millisec;
-    }
-    public double getEndTimeFor_LP_Relaxation() {        
-        return this.nodeMetadata.endTimeFor_LP_Relaxation_millisec;
+    public double getParentsBranchingTime() {
+        return nodeMetadata.timeTakenByParentToBranch ;
     }
     
-    public void setStartTimeFor_LP_Relaxation(double time) {
-        nodeMetadata.startTimeFor_LP_Relaxation_millisec = time;
+    public double getStartTimeOfCurrentSolutionTimeslice() {        
+        return this.nodeMetadata.startTimeOfCurrentSolutionTimeslice;
     }
-
-    public void setEndTimeFor_LP_Relaxation(double time) {
-        nodeMetadata.endTimeFor_LP_Relaxation_millisec = time;
+    public double getEndTimeOfCurrentSolutionTimeslice() {        
+        return this.nodeMetadata.endTimeOfCurrentSolutionTimeslice;
+    }
+    
+    public void setStartTimeOfCurrentSolutionTimeslice(double time ) {        
+          this.nodeMetadata.startTimeOfCurrentSolutionTimeslice=time;
+    }
+    public void setEndTimeOfCurrentSolutionTimeslice(double time) {        
+         this.nodeMetadata.endTimeOfCurrentSolutionTimeslice=time;
+    }
+    public double getTimeForWhichNodeHasAlreadyBeenSolved() {        
+        return this.nodeMetadata.solutionTimeUsedSofar;
+    }
+    
+    public void setTimeForWhichNodeHasAlreadyBeenSolved(double time ) {        
+          this.nodeMetadata.solutionTimeUsedSofar=time;
     }
     
     public void setEasy(){

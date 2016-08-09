@@ -45,7 +45,7 @@ public class UtilityLibrary {
         //depth of child is 1 more than parent
         NodeAttachment child =new NodeAttachment (   easy, parentNode.getUpperBounds(), 
                 parentNode.getLowerBounds() ,  ONE+parentNode.getDepthFromOriginalRoot(),
-                ONE+parentNode.getDepthFromSubtreeRoot()) ;            
+                ONE+parentNode.getDepthFromSubtreeRoot(), parentNode.        getTimeForWhichNodeHasAlreadyBeenSolved()) ;            
                 
         //now apply the new bounds to the existing bounds
         for (int index = 0 ; index < varArray.length; index ++) {                           

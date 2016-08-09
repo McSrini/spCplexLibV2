@@ -25,10 +25,13 @@ public class NodeAttachmentMetadata implements Serializable {
     //easy nodes are close to being solved
     public boolean isEasy = false;
     
-    //record time for LP  relaxation in milliseconds
+    //record time   in milliseconds used for solving this node, until it branches
     //we use System.currentTimeMillis() to measure time taken
-    public double startTimeFor_LP_Relaxation_millisec= ZERO;
-    public double endTimeFor_LP_Relaxation_millisec= ZERO;
+    public double startTimeOfCurrentSolutionTimeslice= System.currentTimeMillis();
+    public double endTimeOfCurrentSolutionTimeslice= ZERO;
+    public double solutionTimeUsedSofar= ZERO;
+    
+    public double timeTakenByParentToBranch=ZERO;
     
     //this is the guid of the tree which contains this node
     //not needed in this library, but useful for Spark
