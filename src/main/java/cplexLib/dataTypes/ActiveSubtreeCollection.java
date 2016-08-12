@@ -120,6 +120,18 @@ public class ActiveSubtreeCollection   {
         return size;
     }
     
+    //find the number of active subtrees which have no kids, i.e. only sub-tree root
+    public int findNumberOfActiveSubtreesWithNoChildren () throws Exception {
+        int count = 0 ;
+        for (ActiveSubtree tree: activeSubtreeList){
+        
+             if (!tree.isDiscardable() && ! (tree.isSolvedToCompletion()) ) {
+                 if (tree.getPendingChildNodeCount()==ZERO) count ++;
+             }
+        }
+        return count;
+    }
+    
     public List<String> getActiveSubtreeIDs () {
         List<String>  idList = new ArrayList<String> ();
         

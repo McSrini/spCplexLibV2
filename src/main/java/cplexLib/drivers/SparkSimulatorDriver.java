@@ -17,6 +17,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.RollingFileAppender; 
+import scala.Tuple2; 
 /**
  *
  * @author srini
@@ -29,8 +30,8 @@ import org.apache.log4j.RollingFileAppender;
 public class SparkSimulatorDriver {
     
     private static Logger logger=Logger.getLogger(SparkSimulatorDriver.class);
-    final static int ITER_TIME= 60*2 ;// seconds
-    final static int NUM_PARTITIONS= 39 ;// 
+    final static int ITER_TIME= 1 ;// seconds
+    public final static int NUM_PARTITIONS= 39 ;// 
     final static int  MAX_ITERATIONS  =   THOUSAND  ; 
     
     
@@ -118,13 +119,13 @@ public class SparkSimulatorDriver {
           
              
             //we only farm at the end of iter 0
-            if (ZERO==iteration  ) {
-                dofarming();
-            } 
+            //if (ZERO==iteration  ) {
+                //dofarming();
+           // } 
             
             //test
             //add averaging heuristic
-            //doAverageFarming();
+            // doAverageFarming();
           
         }
         
@@ -172,7 +173,7 @@ public class SparkSimulatorDriver {
         return iter == ZERO ? MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE : MAX_UNSOLVED_CHILD_NODES_PER_SUB_TREE*TEN*TEN*THOUSAND;
     }
     
-    /*
+     /*
     private static void doAverageFarming() throws Exception {
         logger.info("Farming ... ");
         Map <Integer, List<NodeAttachmentMetadata> > perPartitionPendingNodesMap= 
