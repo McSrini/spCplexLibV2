@@ -120,6 +120,10 @@ public class ActiveSubtree extends LoggingInitializer {
         
     }
     
+    public double getBestObjValue () throws IloException {
+        return this.cplex.getBestObjValue();
+    }
+    
     public Solution getSolution () throws IloException {
         Solution soln = new Solution () ;
         

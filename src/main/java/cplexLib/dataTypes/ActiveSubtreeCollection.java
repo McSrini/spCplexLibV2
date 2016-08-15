@@ -8,11 +8,13 @@ package cplexLib.dataTypes;
 import static cplexLib.constantsAndParams.Constants.LOG_FILE_EXTENSION;
 import static cplexLib.constantsAndParams.Constants.THOUSAND;
 import static cplexLib.constantsAndParams.Constants.ZERO;
+import static cplexLib.constantsAndParams.Constants.isMaximization;
 import static cplexLib.constantsAndParams.Parameters.HARD_NODE_TIME_FACTOR; 
 import static cplexLib.constantsAndParams.Parameters.LOG_FOLDER;
 import static cplexLib.constantsAndParams.Parameters.MIN_TIME_SLICE_FOR_TREE_SECONDS;
 import static cplexLib.constantsAndParams.Parameters.PARTITION_ID;
 import cplexLib.drivers.SparkSimulatorDriver;
+import ilog.concert.IloException;
 import ilog.cplex.IloCplex;
 import java.io.IOException;
 import java.time.Duration;
@@ -118,6 +120,28 @@ public class ActiveSubtreeCollection   {
         }
         
         return size;
+    }
+    
+    //remove trees which are inferior to a supplied cutoff
+    public  List <String>  removeInferiorTrees (double cutoff) throws IloException {
+        List <Integer> positionsToCull = new ArrayList <Integer> ();
+        List <String> removedTrees = new ArrayList <String> ();
+        
+        for (int index = ZERO; index <activeSubtreeList.size(); index ++ ){
+            if ( activeSubtreeList.get(index).getBestObjValue() <= cutoff && isMaximization  ) positionsToCull.add(index);
+            if ( activeSubtreeList.get(index).getBestObjValue() >= cutoff && !isMaximization  ) positionsToCull.add(index);
+        }
+        
+        //get indices in decreasing order
+        Collections.reverse(  positionsToCull);
+        
+        for (int index: positionsToCull){
+            ActiveSubtree removedTree= activeSubtreeList.remove(index);
+            removedTrees.add(removedTree.getGUID());
+            removedTree.end();
+        }
+        
+        return removedTrees;
     }
     
     //find the number of active subtrees which have no kids, i.e. only sub-tree root
